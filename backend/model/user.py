@@ -18,6 +18,7 @@ class User(SQLModel, table=True):
     password_hash: str = Field(exclude=True)
     first_name: str
     last_name: str
+    role: str = Field(sa_column=Column(pg.VARCHAR, nullable=False, server_default="user"))
     email: str = Field(sa_column=Column(String, unique=True, nullable=False))
     gender: Optional[str] = None
     age: Optional[int] = None

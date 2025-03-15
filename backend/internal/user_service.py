@@ -65,6 +65,7 @@ class UserService:
             new_user = User(
                 **user_data
             )  # uid, created_at, updated_at are handled internally
+            new_user.role = "user"
             new_user.password_hash = generate_passwd_hash(user_data["password"])
             session.add(new_user)
             await session.commit()
@@ -106,7 +107,7 @@ class UserService:
             # Generate Tokens
             try:
                 access_token = create_access_token(
-                    {"email": user.email, "user_uid": str(user.uid)}
+                    {"email": user.email, "user_uid": str(user.uid), "role": user.role}
                 )
 
                 refresh_token = create_access_token(
