@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from config.security import AccessTokenBearer, RefreshTokenBearer
+from config.security import AccessTokenBearer, RefreshTokenBearer, get_current_user
 from database.base import get_session
 from fastapi import APIRouter, Depends, status
 from internal.user_service import UserService
@@ -53,6 +53,9 @@ async def delete_user(uid: UUID, session: AsyncSession = Depends(get_session)):
     await user_service.delete_user(uid, session)
     return None
 
+@router.get("/me")
+async def get_current_user_info(user = Depends(get_current_user)):
+    return user
 
 @router.get("/logout")
 async def revoke_token(token_details: dict = Depends(access_token_bearer)):
