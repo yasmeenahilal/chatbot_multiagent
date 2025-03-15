@@ -1,5 +1,1 @@
-from .user import (
-    CreateUser,
-    UpdateUser,
-    GetUser
-)
+from .user import CreateUser, GetUser, UpdateUser
