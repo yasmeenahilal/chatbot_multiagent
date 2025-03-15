@@ -1,7 +1,8 @@
-from pydantic import BaseModel, EmailStr
-from typing import Optional
 from datetime import datetime
+from typing import Optional
 from uuid import UUID
+
+from pydantic import BaseModel, EmailStr, Field
 
 
 class UserBase(BaseModel):
@@ -13,7 +14,9 @@ class UserBase(BaseModel):
 
 
 class CreateUser(UserBase):
-    pass
+    username: str = Field(max_length=16)
+    password: str = Field(min_length=8)
+
 
 class UpdateUser(BaseModel):
     first_name: Optional[str] = None
@@ -21,7 +24,13 @@ class UpdateUser(BaseModel):
     gender: Optional[str] = None
     age: Optional[int] = None
 
+
 class GetUser(UserBase):
     uid: UUID
     created_at: datetime
     updated_at: datetime
+
+
+class Login(BaseModel):
+    email: str = Field(max_length=40)
+    password: str = Field(min_length=8)
