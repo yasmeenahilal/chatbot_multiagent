@@ -52,3 +52,8 @@ async def update_user(
 async def delete_user(uid: UUID, session: AsyncSession = Depends(get_session)):
     await user_service.delete_user(uid, session)
     return None
+
+
+@router.get("/logout")
+async def revoke_token(token_details: dict = Depends(access_token_bearer)):
+    return await user_service.revoke_token(token_details)

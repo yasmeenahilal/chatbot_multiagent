@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 from config.settings import Config
+from database.redis import add_jti_to_blocklist
 from fastapi import HTTPException, status
 from fastapi.responses import JSONResponse
 from model.user import User
@@ -208,4 +209,36 @@ class UserService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Database error: {str(e)}",
+            )
+
+    # async def revoke_token(self, token_details: dict):
+    #     jti = token_details["jti"]
+    #     await add_jti_to_blocklist(jti)
+
+    #     return JSONResponse(
+    #         content={"message": "Logged Out Successfully"},
+    #         status_code=status.HTTP_200_OK,
+    #     )
+    async def revoke_token(self, token_details: dict):
+        try:
+            jti = token_details.get("jti")
+            if not jti:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid token details",
+                )
+
+            # Add the JTI to the Redis blocklist
+            await add_jti_to_blocklist(jti)
+
+            return JSONResponse(
+                content={"message": "Logged out successfully"},
+                status_code=status.HTTP_200_OK,
+            )
+        except HTTPException as e:
+            raise e
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to revoke token: {str(e)}",
             )
