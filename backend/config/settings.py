@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str
     JWT_TOKEN_VALIDITY: int
     REFRESH_TOKEN_VALIDITY: int
+    REDIS_HOST: str
+    REDIS_PORT: int
 
     model_config = SettingsConfigDict(
         env_file=".env",
