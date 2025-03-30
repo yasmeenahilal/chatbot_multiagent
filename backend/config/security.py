@@ -7,6 +7,10 @@ from utils.utils import decode_token
 from database.base import get_session
 from sqlmodel.ext.asyncio.session import AsyncSession
 from internal.user_service import UserService
+from typing import Any, List
+from model.user import User
+
+
 
 user_service = UserService()
 
@@ -71,10 +75,28 @@ class RefreshTokenBearer(TokenBearer):
                 detail="Please provide an refresh token",
             )
 
-
 async def get_current_user(token_details: dict = Depends(AccessTokenBearer()),
                      session: AsyncSession = Depends(get_session)):
     print("\n\nTokenDetail", token_details)
     user_email = token_details['user']
     user = await user_service.get_user_by_email(user_email, session)
     return user
+
+
+class RoleChecker:
+    def __init__(self, allowed_roles: List[str]) -> None:
+        self.allowed_roles = allowed_roles
+    
+    def __call__(self, current_user: User = Depends(get_current_user)) -> Any:
+        if current_user.role in self.allowed_roles:
+            return True
+        raise HTTPException(
+            status_code = status.HTTP_403_FORBIDDEN,
+            detail = "You are not allowed to perform this operation"
+        )
+
+def admin_role_dependency():
+    return Depends(RoleChecker(['admin']))
+
+def user_role_dependency():
+    return Depends(RoleChecker(['admin', "user"]))

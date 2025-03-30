@@ -1,11 +1,13 @@
 from uuid import UUID
 
-from config.security import AccessTokenBearer, RefreshTokenBearer, get_current_user
+from config.security import AccessTokenBearer, RefreshTokenBearer, RoleChecker, get_current_user
 from database.base import get_session
 from fastapi import APIRouter, Depends, status
 from internal.user_service import UserService
 from schemas.user import CreateUser, GetUser, Login, UpdateUser
 from sqlmodel.ext.asyncio.session import AsyncSession
+from fastapi import Depends
+from config.security import admin_role_dependency, user_role_dependency
 
 router = APIRouter()
 user_service = UserService()
@@ -13,7 +15,8 @@ access_token_bearer = AccessTokenBearer()
 refresh_token_bearer = RefreshTokenBearer()
 
 
-@router.get("/users", response_model=list[GetUser], status_code=status.HTTP_200_OK)
+
+@router.get("/users", response_model=list[GetUser], status_code=status.HTTP_200_OK, dependencies=[admin_role_dependency()])
 async def get_all_users(
     session: AsyncSession = Depends(get_session),
     user_details=Depends(access_token_bearer),
@@ -21,7 +24,7 @@ async def get_all_users(
     return await user_service.get_all_user(session)
 
 
-@router.get("/users/{uid}", response_model=GetUser, status_code=status.HTTP_200_OK)
+@router.get("/users/{uid}", response_model=GetUser, status_code=status.HTTP_200_OK, dependencies=[user_role_dependency()])
 async def get_user(uid: UUID, session: AsyncSession = Depends(get_session)):
     return await user_service.get_user(uid, session)
 
@@ -37,7 +40,7 @@ async def login_user(user: Login, session: AsyncSession = Depends(get_session)):
 
 
 @router.get("/refresh_token")
-async def get_new_access_token(token_details: dict = Depends(RefreshTokenBearer())):
+async def get_new_access_token(token_details: dict = Depends(refresh_token_bearer)):
     return await user_service.get_new_access_token(token_details)
 
 
@@ -53,7 +56,7 @@ async def delete_user(uid: UUID, session: AsyncSession = Depends(get_session)):
     await user_service.delete_user(uid, session)
     return None
 
-@router.get("/me")
+@router.get("/me", dependencies=[user_role_dependency()])
 async def get_current_user_info(user = Depends(get_current_user)):
     return user
 
